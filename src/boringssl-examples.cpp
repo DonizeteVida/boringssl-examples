@@ -6,12 +6,10 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
-#include <iostream>
-using namespace std;
-
-#include <openssl/aead.h>
+#include <openssl/evp.h>
+#include <openssl/ec.h>
 
 int main() {
-	cout << "!!!Hello World!!!" << endl; // prints !!!Hello World!!!
+	EVP_EncodeBlock(0, 0, 0);
 	return 0;
 }
