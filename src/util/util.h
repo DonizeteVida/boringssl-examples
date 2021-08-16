@@ -13,6 +13,8 @@
 
 void error(std::string);
 void assert(bool, std::string);
+bool write_file(char* file, char* content, int size);
+char* read_file(char* file);
 
 
 #endif /* UTIL_UTIL_H_ */
