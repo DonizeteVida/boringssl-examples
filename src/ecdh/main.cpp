@@ -4,6 +4,16 @@
 #include "openssl/engine.h"
 #include "util.h"
 
+void ECDH_test_encrypt(EVP_PKEY* pkey) {
+	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
+	assert(ctx, "Encrypt context is NULL");
+	assert(EVP_PKEY_encrypt_init(ctx), "Encrypt init cannot be started");
+}
+
+void ECDH_test_decrypt(EVP_PKEY* pkey) {
+
+}
+
 void ECDH_generate_key() {
 	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
 	assert(ctx, "Context cannot be created");
@@ -24,8 +34,8 @@ void ECDH_generate_key() {
 	EVP_PKEY* keygen_key = NULL;
 	assert(EVP_PKEY_keygen(keygen_ctx, &keygen_key), "KeyGen key cannot be created");
 
-	EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(keygen_key);
-	assert(ec_key, "EC_KEY was not generated");
+	ECDH_test_encrypt(keygen_key);
+	ECDH_test_decrypt(keygen_key);
 
 	//We'll write this key
 	BIO* bio_priv_file = BIO_new_file("priv.pem", "wr");
@@ -34,15 +44,22 @@ void ECDH_generate_key() {
 	assert(bio_priv_file, "File bio_priv_file was not created");
 	assert(bio_pub_file, "File bio_pub_file was not created");
 
+
+	EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(keygen_key);
+	assert(ec_key, "EC_KEY was not generated");
+
 	assert(PEM_write_bio_ECPrivateKey(bio_priv_file, ec_key, NULL, NULL, 0, NULL, NULL), "ECPrivateKey cannot be write");
 	assert(PEM_write_bio_EC_PUBKEY(bio_pub_file, ec_key), "EC_PUBKEY cannot be write");
 }
 
-void ECDH_test_encrypt() {
-	//ECDH_generate_key();
+void ECDH_test_start() {
+	ECDH_generate_key();
+
+	return;
 
 	BIO* bio_pub_file = BIO_new_file("pub.pem", "r");
 	BIO* bio_priv_file = BIO_new_file("priv.pem", "r");
+
 	assert(bio_priv_file, "We cannot read a PEM file");
 	assert(bio_pub_file, "We cannot read a PEM file");
 
@@ -54,6 +71,6 @@ void ECDH_test_encrypt() {
 
 void ECDH_test() {
 	printf("Inicio de um sonho\n");
-	ECDH_test_encrypt();
+	ECDH_test_start();
 	printf("Deu tudo certo!\n");
 }

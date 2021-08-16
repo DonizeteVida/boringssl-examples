@@ -8,6 +8,8 @@
 #include <iostream>
 using namespace std;
 
+#include "openssl/err.h";
+
 void error(string message) {
 	cerr << message << endl;
 }
@@ -15,6 +17,7 @@ void error(string message) {
 void assert(bool res, string message) {
 	if (!res) {
 		error(message);
+		printf("\nerror: %s\n", ERR_error_string(ERR_get_error(), NULL));
 		exit(EXIT_FAILURE);
 	}
 }

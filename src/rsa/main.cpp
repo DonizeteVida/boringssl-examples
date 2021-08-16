@@ -31,27 +31,28 @@ void RSA_generate_key() {
 	assert(rsa_key, "RSA key was not generated");
 
 	//We'll write this key
-	BIO* bio_file = BIO_new_file("rsa_key.pem", "wr");
-	assert(bio_file, "File was not created");
-	//assert(PEM_write_bio_RSAPrivateKey(bio_file, rsa_key, NULL, NULL, 0, NULL, NULL), "RSA private key cannot be write");
-	//assert(PEM_write_bio_RSAPublicKey(bio_file, rsa_key), "RSA public key cannot be write");
-	assert(PEM_write_bio_RSA_PUBKEY(bio_file, rsa_key), "RSA public key cannot be write");
+	BIO* bio_priv_file = BIO_new_file("priv.pem", "w");
+	BIO* bio_pub_file = BIO_new_file("pub.pem", "w");
+	assert(bio_priv_file, "File bio_priv_file was not created");
+	assert(bio_pub_file, "File bio_pub_file was not created");
+	assert(PEM_write_bio_RSAPrivateKey(bio_priv_file, rsa_key, NULL, NULL, 0, NULL, NULL), "RSA private key cannot be write");
+	assert(PEM_write_bio_RSA_PUBKEY(bio_priv_file, rsa_key), "RSA public key cannot be write");
 }
 
-void RSA_test_encrypt() {
+void RSA_test_start() {
 	RSA_generate_key();
 
-	BIO* bio_file = BIO_new_file("rsa_key.pem", "wr");
-	assert(bio_file, "We cannot read a PEM file");
+	BIO* bio_priv_file = BIO_new_file("priv.pem", "r");
+	assert(bio_priv_file, "We cannot read a PEM file");
 
-	RSA* rsa = NULL;
+	RSA* rsa_priv = NULL;
 	//assert(PEM_read_bio_RSAPrivateKey(bio_file, &rsa, NULL, NULL), "We cannot retrieve file as RSA Private Key");
 	//assert(PEM_read_bio_RSAPublicKey(bio_file, &rsa, NULL, NULL), "We cannot retrieve file as RSA Public Key");
-	assert(PEM_read_bio_RSA_PUBKEY(bio_file, &rsa, NULL, NULL), "We cannot retrieve file as RSA Public Key");
+	assert(PEM_read_bio_RSAPrivateKey(bio_priv_file, &rsa_priv, NULL, NULL), "We cannot retrieve file as RSA Public Key");
 }
 
 void RSA_test() {
 	printf("Inicio de um sonho\n");
-	RSA_test_encrypt();
+	RSA_test_start();
 	printf("Deu tudo certo!\n");
 }
