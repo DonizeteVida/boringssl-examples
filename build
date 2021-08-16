@@ -1,0 +1,3 @@
+g++ -I ./third-party/boringssl/include -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF ./src/boringssl-examples.d -MT ./src/boringssl-examples.o -o ./src/boringssl-examples.o ./src/boringssl-examples.cpp
+
+g++ -pthread -o ./src/boringssl-examples  ./src/boringssl-examples.o  ./third-party/boringssl/build/crypto/libcrypto.a

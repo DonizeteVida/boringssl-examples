@@ -6,10 +6,19 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
-#include <openssl/evp.h>
-#include <openssl/ec.h>
+#include "openssl/evp.h"
+
+#include "rsa/rsa_example.h"
+#include "ecdh/ecdh_example.h"
 
 int main() {
-	EVP_EncodeBlock(0, 0, 0);
+	OpenSSL_add_all_algorithms();
+	OPENSSL_add_all_algorithms_conf();
+	OpenSSL_add_all_ciphers();
+	OpenSSL_add_all_digests();
+
+	//RSA_test();
+	ECDH_test();
+
 	return 0;
 }
