@@ -7,6 +7,7 @@
 //============================================================================
 
 #include "openssl/evp.h"
+#include "openssl/err.h"
 
 #include "rsa/rsa_example.h"
 #include "ecdh/ecdh_example.h"
@@ -16,6 +17,7 @@ int main() {
 	OPENSSL_add_all_algorithms_conf();
 	OpenSSL_add_all_ciphers();
 	OpenSSL_add_all_digests();
+	ERR_load_crypto_strings();
 
 	//RSA_test();
 	ECDH_test();
