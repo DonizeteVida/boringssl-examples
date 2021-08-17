@@ -6,7 +6,10 @@
  */
 
 #include <iostream>
+#include <fstream>
 using namespace std;
+
+#include <string.h>
 
 #include "openssl/err.h";
 
@@ -22,29 +25,25 @@ void assert(bool res, string message) {
 	}
 }
 
-bool write_file(char *file, char *content, int size) {
-	FILE *fp = fopen(file, "w");
-	if (!fp)
-		return false;
-	while (size-- > 0) {
-		fputc(content[0], fp);
-		content++;
-	}
-	fclose(fp);
+bool write_file(char *file, char *content) {
+	ofstream stream(file);
+
+	stream << content;
+
+	stream.close();
+
 	return true;
 }
 
 char* read_file(char *file) {
-	FILE *fp = fopen(file, "r");
-	if (!fp)
-		return 0;
-	fseek(fp, 0, SEEK_END);
-	int size = ftell(fp);
-	fseek(fp, 0, SEEK_SET);
-	char *buf = (char*) malloc(sizeof(char) * size);
-	for(int i = 0; i < size; i++) {
-		buf[i] = fgetc(fp);
-	}
-	fclose(fp);
-	return buf;
+	ifstream stream(file);
+	string str;
+	while(getline(stream, str))
+		;
+	stream.close();
+	int length = str.length();
+	char* content = (char*) malloc(sizeof(char) * length);
+	strcpy(content, str.c_str());
+
+	return content;
 }

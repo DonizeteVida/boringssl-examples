@@ -13,7 +13,7 @@ void RSA_encrypt(EVP_PKEY *pkey) {
 	assert(EVP_PKEY_encrypt_init(ctx), "Encrypt context cannot be started");
 	assert(EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING), "We cannot set PADDING");
 
-	unsigned char in[] = "DONI";
+	unsigned char in[] = "Donizete Junior Ribeiro Vida";
 	unsigned long in_len = sizeof(in);
 
 	unsigned char* out = 0;
@@ -26,7 +26,7 @@ void RSA_encrypt(EVP_PKEY *pkey) {
 	assert(EVP_PKEY_encrypt(ctx, out, &out_len, in, in_len), "Encrypt buffer transfer cannot be performed");
 	out[out_len] = '\0';
 
-	assert(write_file((char*)"encrypt.txt", (char*) out, out_len + 1), "Encrypt.data cannot be write");
+	assert(write_file((char*)"encrypt.txt", (char*) out), "Encrypt.data cannot be write");
 	std::cout << "Encrypt data: " << out << std::endl;
 	OPENSSL_free(out);
 }
@@ -50,7 +50,6 @@ void RSA_decrypt(EVP_PKEY* pkey) {
 
 	out = (unsigned char*) OPENSSL_malloc(out_len);
 	assert(EVP_PKEY_decrypt(ctx, out, &out_len, (uint8_t*) in, in_len), "Decrypt buffer transfer cannot be performed");
-	out[out_len] = '\0';
 
 	std::cout << "Decrypt data: " << out << std::endl;
 }

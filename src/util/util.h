@@ -13,7 +13,7 @@
 
 void error(std::string);
 void assert(bool, std::string);
-bool write_file(char* file, char* content, int size);
+bool write_file(char* file, char* content);
 char* read_file(char* file);
 
 
