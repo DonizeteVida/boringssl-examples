@@ -117,6 +117,7 @@ void ECDSA_test_start() {
 
 
 	EVP_PKEY_free(pkey);
+	EVP_PKEY_free(read_pkey);
 }
 
 void ECDSA_test() {
