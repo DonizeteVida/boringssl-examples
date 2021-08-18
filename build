@@ -1,3 +1,3 @@
-g++ -I ./third-party/boringssl/include -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF ./src/boringssl-examples.d -MT ./src/boringssl-examples.o -o ./src/boringssl-examples.o ./src/boringssl-examples.cpp
+g++ -I "./third-party/boringssl/include" -I"./src/util" -O0 -g3 -Wall -c -fmessage-length=0 -MMD -MP -MF"src/rsa/main.d" -MT"src/rsa/main.o" -o "src/rsa/main.o" "../src/rsa/main.cpp"
 
-g++ -pthread -o ./src/boringssl-examples  ./src/boringssl-examples.o  ./third-party/boringssl/build/crypto/libcrypto.a
+g++ -pthread -o "boringssl-examples"  ./src/util/util.o  ./src/trash/trash.o  ./src/rsa/main.o  ./src/ecdsa/main.o  ./src/ecdh/main.o  ./src/boringssl-examples.o  ./third-party/boringssl/build/crypto/libcrypto.a 
