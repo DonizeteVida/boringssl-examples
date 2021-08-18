@@ -1,20 +1,69 @@
-#include "openssl/rsa.h"
 #include "openssl/evp.h"
 #include "openssl/pem.h"
-#include "openssl/engine.h"
+
 #include "util.h"
 
-void ECDH_test_encrypt(EVP_PKEY* pkey) {
+#include <string.h>
+#include <iostream>
+
+static void ECDH_test_encrypt(EVP_PKEY* pkey, unsigned char* sig, unsigned long* sig_len, unsigned char* dig, long dig_len) {
 	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
 	assert(ctx, "Encrypt context is NULL");
-	assert(EVP_PKEY_encrypt_init(ctx), "Encrypt init cannot be started");
+
+	assert(EVP_PKEY_encrypt_init(ctx), "Encrypt sign cannot be started");
+
+	assert(EVP_PKEY_encrypt(ctx, NULL, sig_len, dig, dig_len), "Signature size cannot be calculated");
+	std::cout << "Digest length: " << *sig_len << std::endl;
+
+	assert(EVP_PKEY_encrypt(ctx, sig, sig_len, dig, dig_len), "Signature cannot be transfered");
+
+	std::cout << "Digest content: " << sig << std::endl;
+
+	EVP_PKEY_CTX_free(ctx);
 }
 
-void ECDH_test_decrypt(EVP_PKEY* pkey) {
+static void ECDH_test_decrypt(EVP_PKEY* pkey, unsigned char* out, unsigned long out_len, unsigned char* in, long in_len) {
+	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
+	assert(ctx, "Encrypt context is NULL");
 
+	assert(EVP_PKEY_decrypt_init(ctx), "Decrypt init cannot be performed");
+	assert(EVP_PKEY_decrypt(ctx, out, &out_len, in, in_len), "Decrypt cannot be performed");
+
+	EVP_PKEY_CTX_free(ctx);
 }
 
-void ECDH_generate_key() {
+static void ECDH_write_key(EC_KEY* ec_key) {
+	//We'll write this key
+	BIO* bio = BIO_new_file("key.pem", "w");
+
+	assert(ec_key, "EC_KEY was not generated");
+	BIO_set_flags(bio, BIO_FLAGS_WRITE);
+
+	assert(PEM_write_bio_ECPrivateKey(bio, ec_key, NULL, NULL, 0, NULL, NULL), "ECPrivateKey cannot be write");
+	assert(PEM_write_bio_EC_PUBKEY(bio, ec_key), "EC_PUBKEY cannot be write");
+
+	BIO_free(bio);
+}
+
+static EVP_PKEY* ECDH_test_recover_key() {
+	BIO* bio = BIO_new_file("key.pem", "r");
+
+	assert(bio, "We cannot read a PEM file");
+
+	EC_KEY* ec_key = NULL;
+
+	assert(PEM_read_bio_ECPrivateKey(bio, &ec_key, NULL, NULL), "We cannot retrieve file as EC Private Key");
+	assert(PEM_read_bio_EC_PUBKEY(bio, &ec_key, NULL, NULL), "We cannot retrieve file as EC Public Key");
+
+	BIO_free(bio);
+
+	EVP_PKEY* pkey = EVP_PKEY_new();
+	assert(EVP_PKEY_set1_EC_KEY(pkey, ec_key), "EC_KEY cannot be set to EVP_PKEY");
+
+	return pkey;
+}
+
+static EVP_PKEY* ECDH_generate_key() {
 	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
 	assert(ctx, "Context cannot be created");
 
@@ -24,49 +73,45 @@ void ECDH_generate_key() {
 	assert(EVP_PKEY_CTX_set_ec_param_enc(ctx, OPENSSL_EC_NAMED_CURVE), "Encoding cannot be set");
 
 	//Creating a new key from filled context
-	EVP_PKEY* param_gen_key = NULL;
-	assert(EVP_PKEY_paramgen(ctx, &param_gen_key), "EVP_PKEY key cannot be created from context");
+	EVP_PKEY* paramgen_key = NULL;
+	assert(EVP_PKEY_paramgen(ctx, &paramgen_key), "EVP_PKEY key cannot be created from context");
 
 	//Creating a new context as we need to use their API's
-	EVP_PKEY_CTX* keygen_ctx = EVP_PKEY_CTX_new(param_gen_key, NULL);
+	EVP_PKEY_CTX* keygen_ctx = EVP_PKEY_CTX_new(paramgen_key, NULL);
 	assert(keygen_ctx, "ParamGen context cannot be created");
 	assert(EVP_PKEY_keygen_init(keygen_ctx), "KeyGen cannot be started");
 	EVP_PKEY* keygen_key = NULL;
 	assert(EVP_PKEY_keygen(keygen_ctx, &keygen_key), "KeyGen key cannot be created");
 
-	ECDH_test_encrypt(keygen_key);
-	ECDH_test_decrypt(keygen_key);
+	EVP_PKEY_CTX_free(ctx);
+	EVP_PKEY_free(paramgen_key);
+	EVP_PKEY_CTX_free(keygen_ctx);
 
-	//We'll write this key
-	BIO* bio_priv_file = BIO_new_file("priv.pem", "wr");
-	BIO* bio_pub_file = BIO_new_file("pub.pem", "wr");
-
-	assert(bio_priv_file, "File bio_priv_file was not created");
-	assert(bio_pub_file, "File bio_pub_file was not created");
-
-
-	EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(keygen_key);
-	assert(ec_key, "EC_KEY was not generated");
-
-	assert(PEM_write_bio_ECPrivateKey(bio_priv_file, ec_key, NULL, NULL, 0, NULL, NULL), "ECPrivateKey cannot be write");
-	assert(PEM_write_bio_EC_PUBKEY(bio_pub_file, ec_key), "EC_PUBKEY cannot be write");
+	return keygen_key;
 }
 
-void ECDH_test_start() {
-	ECDH_generate_key();
+static void ECDH_test_start() {
 
-	return;
+	unsigned char in[] = "Donizete Junior Ribeiro Vida";
+	unsigned long in_len = sizeof(in);
 
-	BIO* bio_pub_file = BIO_new_file("pub.pem", "r");
-	BIO* bio_priv_file = BIO_new_file("priv.pem", "r");
+	unsigned char buffer[2048];
+	unsigned long buffer_len = 0;
 
-	assert(bio_priv_file, "We cannot read a PEM file");
-	assert(bio_pub_file, "We cannot read a PEM file");
+	EVP_PKEY* pkey = ECDH_generate_key();
 
-	EC_KEY* ec_priv_key = NULL;
-	EC_KEY* ec_pub_key = NULL;
-	assert(PEM_read_bio_ECPrivateKey(bio_priv_file, &ec_priv_key, NULL, NULL), "We cannot retrieve file as EC Public Key");
-	assert(PEM_read_bio_EC_PUBKEY(bio_pub_file, &ec_pub_key, NULL, NULL), "We cannot retrieve file as EC Public Key");
+	ECDH_test_encrypt(pkey, buffer, &buffer_len, in, in_len);
+	//in[in_len - 1] = 'A';
+	ECDH_test_decrypt(pkey, buffer, buffer_len, in, in_len);
+
+	ECDH_write_key(EVP_PKEY_get0_EC_KEY(pkey));
+	EVP_PKEY* read_pkey = ECDH_test_recover_key();
+	//in[in_len - 1] = 'A';
+	ECDH_test_decrypt(read_pkey, buffer, buffer_len, in, in_len);
+
+
+	EVP_PKEY_free(pkey);
+	EVP_PKEY_free(read_pkey);
 }
 
 void ECDH_test() {

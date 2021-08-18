@@ -7,54 +7,71 @@
 #include <iostream>
 #include <string.h>
 
-void RSA_encrypt(EVP_PKEY *pkey) {
-	EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, NULL);
+static void RSA_test_encrypt(EVP_PKEY* pkey, unsigned char* out, unsigned long* out_len, unsigned char* in, long in_len) {
+	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
+	assert(ctx, "Encrypt context is NULL");
 
-	assert(EVP_PKEY_encrypt_init(ctx), "Encrypt context cannot be started");
-	assert(EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING), "We cannot set PADDING");
+	assert(EVP_PKEY_encrypt_init(ctx), "Encrypt sign cannot be performed");
+	//assert(EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING), "Encrypt padding cannot be performed");
 
-	unsigned char in[] = "Donizete Junior Ribeiro Vida";
-	unsigned long in_len = sizeof(in);
+	assert(EVP_PKEY_encrypt(ctx, NULL, out_len, in, in_len), "Encrypt length cannot be performed");
+	std::cout << "Encrypt length: " << *out_len << std::endl;
 
-	unsigned char* out = 0;
-	unsigned long out_len = 0;
+	assert(EVP_PKEY_encrypt(ctx, out, out_len, in, in_len), "Encrypt cannot be performed");
 
-	assert(EVP_PKEY_encrypt(ctx, NULL, &out_len, in, in_len), "Encrypt size cannot be calculated");
-	std::cout << "Encrypt size: " << out_len << std::endl;
+	std::cout << "Encrypt content: " << out << std::endl;
 
-	assert(out = (unsigned char*) OPENSSL_malloc(out_len + 1), "OPENSSL_malloc cannot be performed");
-	assert(EVP_PKEY_encrypt(ctx, out, &out_len, in, in_len), "Encrypt buffer transfer cannot be performed");
-	out[out_len] = '\0';
-
-	assert(write_file((char*)"encrypt.txt", (char*) out), "Encrypt.data cannot be write");
-	std::cout << "Encrypt data: " << out << std::endl;
-	OPENSSL_free(out);
+	EVP_PKEY_CTX_free(ctx);
 }
 
-void RSA_decrypt(EVP_PKEY* pkey) {
-	EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, NULL);
+static void RSA_test_decrypt(EVP_PKEY* pkey, unsigned char* out, unsigned long *out_len, unsigned char* in, long in_len) {
+	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
+	assert(ctx, "Encrypt context is NULL");
 
-	assert(EVP_PKEY_decrypt_init(ctx), "Decrypt context cannot be started");
-	assert(EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING), "We cannot set PADDING");
+	assert(EVP_PKEY_decrypt_init(ctx), "Encrypt init cannot be performed");
+	//assert(EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING), "Decrypt padding cannot be performed");
 
-	char* in = read_file((char*)"encrypt.txt");
-	unsigned int in_len = strlen(in);
+	assert(EVP_PKEY_decrypt(ctx, NULL, out_len, in, in_len), "Decrypt length cannot be performed");
+	assert(EVP_PKEY_decrypt(ctx, out, out_len, in, in_len), "Decrypt cannot be performed");
 
-	unsigned char* out = 0;
-	unsigned long out_len = 0;
-
-	std::cout << "Encrypt data: " << in << std::endl;
-
-	assert(EVP_PKEY_decrypt(ctx, NULL, &out_len, (uint8_t*) in, in_len), "Decrypt size cannot be calculated");
-	std::cout << "Decrypt size: " << out_len << std::endl;
-
-	out = (unsigned char*) OPENSSL_malloc(out_len);
-	assert(EVP_PKEY_decrypt(ctx, out, &out_len, (uint8_t*) in, in_len), "Decrypt buffer transfer cannot be performed");
-
-	std::cout << "Decrypt data: " << out << std::endl;
+	EVP_PKEY_CTX_free(ctx);
 }
 
-void RSA_generate_key() {
+static void RSA_write_key(RSA* rsa_key) {
+	//We'll write this key
+	BIO* bio = BIO_new_file("key.pem", "w");
+
+	assert(rsa_key, "EC_KEY was not generated");
+	BIO_set_flags(bio, BIO_FLAGS_WRITE);
+
+	assert(PEM_write_bio_RSAPrivateKey(bio, rsa_key, NULL, NULL, 0, NULL, NULL), "RSAPrivateKey cannot be performed");
+	assert(PEM_write_bio_RSAPublicKey(bio, rsa_key), "RSAPrivateKey cannot be performed");
+	assert(PEM_write_bio_RSA_PUBKEY(bio, rsa_key), "RSA_PUBKEY cannot be write");
+
+	BIO_free(bio);
+}
+
+static EVP_PKEY* RSA_test_recover_key() {
+	BIO* bio = BIO_new_file("key.pem", "r");
+
+	assert(bio, "We cannot read a PEM file");
+
+	RSA* rsa_key = NULL;
+
+	assert(PEM_read_bio_RSAPrivateKey(bio, &rsa_key, NULL, NULL), "We cannot retrieve file as RSAPrivateKey");
+	assert(PEM_read_bio_RSAPublicKey(bio, &rsa_key, NULL, NULL), "We cannot retrieve file as RSAPublicKey");
+	assert(PEM_read_bio_RSA_PUBKEY(bio, &rsa_key, NULL, NULL), "We cannot retrieve file as RSAPublicKey");
+
+	BIO_free(bio);
+
+	EVP_PKEY* pkey = EVP_PKEY_new();
+
+	assert(EVP_PKEY_set1_RSA(pkey, rsa_key), "EVP_PKEY_set1_RSA cannot be performed");
+
+	return pkey;
+}
+
+static EVP_PKEY* RSA_generate_key() {
 	EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
 	assert(ctx, "Context cannot be created");
 
@@ -69,35 +86,33 @@ void RSA_generate_key() {
 	EVP_PKEY *pkey = NULL;
 	assert(EVP_PKEY_keygen(ctx, &pkey),"EVP_PKEY key cannot be created from context");
 
-	RSA_encrypt(pkey);
-	RSA_decrypt(pkey);
+	EVP_PKEY_CTX_free(ctx);
 
-	RSA *rsa_key = NULL;
-	assert(rsa_key = EVP_PKEY_get0_RSA(pkey), "RSA key was not generated");
-
-	//We'll write this key
-	BIO *bio_priv_file = BIO_new_file("priv.pem", "w");
-	BIO *bio_pub_file = BIO_new_file("pub.pem", "w");
-
-	assert(bio_priv_file, "File bio_priv_file was not created");
-	assert(bio_pub_file, "File bio_pub_file was not created");
-
-	assert(PEM_write_bio_RSAPrivateKey(bio_priv_file, rsa_key, NULL, NULL, 0, NULL, NULL), "RSA private key cannot be write");
-	assert(PEM_write_bio_RSA_PUBKEY(bio_pub_file, rsa_key), "RSA public key cannot be write");
+	return pkey;
 }
 
-void RSA_reload_key() {
-	BIO *bio_priv_file = BIO_new_file("priv.pem", "r");
-	assert(bio_priv_file, "We cannot read a PEM file");
+static void RSA_test_start() {
 
-	RSA *rsa_priv = NULL;
-	//assert(PEM_read_bio_RSAPrivateKey(bio_file, &rsa, NULL, NULL), "We cannot retrieve file as RSA Private Key");
-	//assert(PEM_read_bio_RSAPublicKey(bio_file, &rsa, NULL, NULL), "We cannot retrieve file as RSA Public Key");
-	assert(PEM_read_bio_RSAPrivateKey(bio_priv_file, &rsa_priv, NULL, NULL), "We cannot retrieve file as RSA Public Key");
-}
+	unsigned char in[] = "DONI";
+	unsigned long in_len = sizeof(in);
 
-void RSA_test_start() {
-	RSA_generate_key();
+	unsigned char out[2048];
+	unsigned long out_len = 0;
+
+	EVP_PKEY* pkey = RSA_generate_key();
+
+	RSA_test_encrypt(pkey, out, &out_len, in, in_len);
+	//in[in_len - 1] = 'A';
+	RSA_test_decrypt(pkey, out, &out_len, in, in_len);
+
+	RSA_write_key(EVP_PKEY_get0_RSA(pkey));
+	EVP_PKEY* read_pkey = RSA_test_recover_key();
+	//in[in_len - 1] = 'A';
+	RSA_test_decrypt(read_pkey, out, &out_len, in, in_len);
+
+
+	EVP_PKEY_free(pkey);
+	EVP_PKEY_free(read_pkey);
 }
 
 void RSA_test() {

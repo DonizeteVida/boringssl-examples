@@ -1,6 +1,5 @@
 #include "openssl/evp.h"
 #include "openssl/pem.h"
-#include "openssl/engine.h"
 
 #include "util.h"
 
@@ -24,7 +23,7 @@ static void ECDSA_test_sign(EVP_PKEY* pkey, unsigned char* sig, unsigned long* s
 	EVP_PKEY_CTX_free(ctx);
 }
 
-void ECDSA_test_verify(EVP_PKEY* pkey, unsigned char* sig, unsigned long sig_len, unsigned char* dig, long dig_len) {
+static void ECDSA_test_verify(EVP_PKEY* pkey, unsigned char* sig, unsigned long sig_len, unsigned char* dig, long dig_len) {
 	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
 	assert(ctx, "Encrypt context is NULL");
 	assert(EVP_PKEY_verify_init(ctx), "Verify sign cannot be started");
@@ -38,7 +37,7 @@ void ECDSA_test_verify(EVP_PKEY* pkey, unsigned char* sig, unsigned long sig_len
 	EVP_PKEY_CTX_free(ctx);
 }
 
-void ECDSA_write_key(EC_KEY* ec_key) {
+static void ECDSA_write_key(EC_KEY* ec_key) {
 	//We'll write this key
 	BIO* bio = BIO_new_file("key.pem", "w");
 
@@ -51,14 +50,14 @@ void ECDSA_write_key(EC_KEY* ec_key) {
 	BIO_free(bio);
 }
 
-EVP_PKEY* ECDSA_test_recover_key() {
+static EVP_PKEY* ECDSA_test_recover_key() {
 	BIO* bio = BIO_new_file("key.pem", "r");
 
 	assert(bio, "We cannot read a PEM file");
 
 	EC_KEY* ec_key = NULL;
 
-	assert(PEM_read_bio_ECPrivateKey(bio, &ec_key, NULL, NULL), "We cannot retrieve file as EC Public Key");
+	assert(PEM_read_bio_ECPrivateKey(bio, &ec_key, NULL, NULL), "We cannot retrieve file as EC Private Key");
 	assert(PEM_read_bio_EC_PUBKEY(bio, &ec_key, NULL, NULL), "We cannot retrieve file as EC Public Key");
 
 	BIO_free(bio);
@@ -69,7 +68,7 @@ EVP_PKEY* ECDSA_test_recover_key() {
 	return pkey;
 }
 
-EVP_PKEY* ECDSA_generate_key() {
+static EVP_PKEY* ECDSA_generate_key() {
 	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
 	assert(ctx, "Context cannot be created");
 
@@ -96,7 +95,7 @@ EVP_PKEY* ECDSA_generate_key() {
 	return keygen_key;
 }
 
-void ECDSA_test_start() {
+static void ECDSA_test_start() {
 
 	unsigned char in[] = "Donizete Junior Ribeiro Vida";
 	unsigned long in_len = sizeof(in);
