@@ -2,9 +2,7 @@
 #include "openssl/pem.h"
 
 #include "util.h"
-
-#include <string.h>
-#include <iostream>
+#include "../sign/ECKeyRecover.h"
 
 static void ECDH_test_encrypt(EVP_PKEY* pkey, unsigned char* sig, unsigned long* sig_len, unsigned char* dig, long dig_len) {
 	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
@@ -46,21 +44,8 @@ static void ECDH_write_key(EC_KEY* ec_key) {
 }
 
 static EVP_PKEY* ECDH_test_recover_key() {
-	BIO* bio = BIO_new_file("key.pem", "r");
-
-	assert(bio, "We cannot read a PEM file");
-
-	EC_KEY* ec_key = NULL;
-
-	assert(PEM_read_bio_ECPrivateKey(bio, &ec_key, NULL, NULL), "We cannot retrieve file as EC Private Key");
-	assert(PEM_read_bio_EC_PUBKEY(bio, &ec_key, NULL, NULL), "We cannot retrieve file as EC Public Key");
-
-	BIO_free(bio);
-
-	EVP_PKEY* pkey = EVP_PKEY_new();
-	assert(EVP_PKEY_set1_EC_KEY(pkey, ec_key), "EC_KEY cannot be set to EVP_PKEY");
-
-	return pkey;
+	ECKeyRecover ecKeyRecover("key.pem");
+	return ecKeyRecover();
 }
 
 static EVP_PKEY* ECDH_generate_key() {

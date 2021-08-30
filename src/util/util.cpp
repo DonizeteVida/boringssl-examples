@@ -20,7 +20,9 @@ void error(string message) {
 void assert(bool res, string message) {
 	if (!res) {
 		error(message);
-		cout << "Error: " << ERR_error_string(ERR_get_error(), NULL) << endl;
+		char buf[4096];
+		ERR_error_string(ERR_get_error(), buf);
+		cout << "Error: " << buf << endl;
 		exit(EXIT_FAILURE);
 	}
 }
