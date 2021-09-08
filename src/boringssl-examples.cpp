@@ -12,6 +12,7 @@
 #include "rsa/rsa_example.h"
 #include "ecdh/ecdh_example.h"
 #include "ecdsa/ecdsa_example.h"
+#include "md/ecdsa/mdecdsa.h"
 
 int main() {
 	OpenSSL_add_all_algorithms();
@@ -24,7 +25,8 @@ int main() {
 
 	//RSA_test();
 	//ECDH_test();
-	ECDSA_test();
+	//ECDSA_test();
+	MDECDSA_example();
 
 	return 0;
 }

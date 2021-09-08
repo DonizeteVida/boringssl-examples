@@ -10,11 +10,16 @@
 
 #include <iostream>
 
+typedef struct {
+	uint8_t* data;
+	size_t len;
+} BINARY_DATA;
 
 void error(std::string);
 void assert(bool, std::string);
-bool write_file(char* file, char* content);
-char* read_file(char* file);
+void write_binary(std::string name, BINARY_DATA data);
+BINARY_DATA read_binary(std::string name);
+void BINARY_DATA_free(BINARY_DATA& data);
 
 
 #endif /* UTIL_UTIL_H_ */

@@ -7,29 +7,24 @@
 #include <string.h>
 #include <iostream>
 
-static void ECDSA_test_sign(EVP_PKEY *pkey, unsigned char *sig,
-		unsigned long *sig_len, unsigned char *dig, long dig_len) {
+static void ECDSA_test_sign(EVP_PKEY *pkey, unsigned char *sig, unsigned long *sig_len, unsigned char *dig, long dig_len) {
 	EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, NULL);
 	assert(ctx, "Encrypt context is NULL");
 
 	assert(EVP_PKEY_sign_init(ctx), "Encrypt sign cannot be started");
-	assert(EVP_PKEY_CTX_set_signature_md(ctx, EVP_sha256()),
-			"Sha digest cannot be set");
+	assert(EVP_PKEY_CTX_set_signature_md(ctx, EVP_sha1()), "Sha digest cannot be set");
 
-	assert(EVP_PKEY_sign(ctx, NULL, sig_len, dig, dig_len),
-			"Signature size cannot be calculated");
+	assert(EVP_PKEY_sign(ctx, NULL, sig_len, dig, dig_len), "Signature size cannot be calculated");
 	std::cout << "Digest length: " << *sig_len << std::endl;
 
-	assert(EVP_PKEY_sign(ctx, sig, sig_len, dig, dig_len),
-			"Signature cannot be transfered");
+	assert(EVP_PKEY_sign(ctx, sig, sig_len, dig, dig_len), "Signature cannot be transfered");
 
 	std::cout << "Digest content: " << sig << std::endl;
 
 	EVP_PKEY_CTX_free(ctx);
 }
 
-static void ECDSA_test_verify(EVP_PKEY *pkey, unsigned char *sig,
-		unsigned long sig_len, unsigned char *dig, long dig_len) {
+static void ECDSA_test_verify(EVP_PKEY *pkey, unsigned char *sig, unsigned long sig_len, unsigned char *dig, long dig_len) {
 	EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new(pkey, NULL);
 	assert(ctx, "Encrypt context is NULL");
 	assert(EVP_PKEY_verify_init(ctx), "Verify sign cannot be started");
@@ -50,8 +45,7 @@ static void ECDSA_write_key(EC_KEY *ec_key) {
 	assert(ec_key, "EC_KEY was not generated");
 	BIO_set_flags(bio, BIO_FLAGS_WRITE);
 
-	assert(PEM_write_bio_ECPrivateKey(bio, ec_key, NULL, NULL, 0, NULL, NULL),
-			"ECPrivateKey cannot be write");
+	assert(PEM_write_bio_ECPrivateKey(bio, ec_key, NULL, NULL, 0, NULL, NULL), "ECPrivateKey cannot be write");
 	assert(PEM_write_bio_EC_PUBKEY(bio, ec_key), "EC_PUBKEY cannot be write");
 
 	BIO_free(bio);
@@ -64,16 +58,13 @@ static EVP_PKEY* ECDSA_test_recover_key() {
 
 	EC_KEY *ec_key = NULL;
 
-	assert(PEM_read_bio_ECPrivateKey(bio, &ec_key, NULL, NULL),
-			"We cannot retrieve file as EC Private Key");
-	assert(PEM_read_bio_EC_PUBKEY(bio, &ec_key, NULL, NULL),
-			"We cannot retrieve file as EC Public Key");
+	assert(PEM_read_bio_ECPrivateKey(bio, &ec_key, NULL, NULL), "We cannot retrieve file as EC Private Key");
+	assert(PEM_read_bio_EC_PUBKEY(bio, &ec_key, NULL, NULL), "We cannot retrieve file as EC Public Key");
 
 	BIO_free(bio);
 
 	EVP_PKEY *pkey = EVP_PKEY_new();
-	assert(EVP_PKEY_set1_EC_KEY(pkey, ec_key),
-			"EC_KEY cannot be set to EVP_PKEY");
+	assert(EVP_PKEY_set1_EC_KEY(pkey, ec_key), "EC_KEY cannot be set to EVP_PKEY");
 
 	return pkey;
 }
@@ -84,23 +75,19 @@ static EVP_PKEY* ECDSA_generate_key() {
 
 	//All this is to generate EVP_PKEY key properly
 	assert(EVP_PKEY_paramgen_init(ctx), "ParamGen cannot be started");
-	assert(EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, NID_secp521r1),
-			"Curve cannot be set");
-	assert(EVP_PKEY_CTX_set_ec_param_enc(ctx, OPENSSL_EC_NAMED_CURVE),
-			"Encoding cannot be set");
+	assert(EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, NID_secp521r1), "Curve cannot be set");
+	assert(EVP_PKEY_CTX_set_ec_param_enc(ctx, OPENSSL_EC_NAMED_CURVE), "Encoding cannot be set");
 
 	//Creating a new key from filled context
 	EVP_PKEY *paramgen_key = NULL;
-	assert(EVP_PKEY_paramgen(ctx, &paramgen_key),
-			"EVP_PKEY key cannot be created from context");
+	assert(EVP_PKEY_paramgen(ctx, &paramgen_key), "EVP_PKEY key cannot be created from context");
 
 	//Creating a new context as we need to use their API's
 	EVP_PKEY_CTX *keygen_ctx = EVP_PKEY_CTX_new(paramgen_key, NULL);
 	assert(keygen_ctx, "ParamGen context cannot be created");
 	assert(EVP_PKEY_keygen_init(keygen_ctx), "KeyGen cannot be started");
 	EVP_PKEY *keygen_key = NULL;
-	assert(EVP_PKEY_keygen(keygen_ctx, &keygen_key),
-			"KeyGen key cannot be created");
+	assert(EVP_PKEY_keygen(keygen_ctx, &keygen_key), "KeyGen key cannot be created");
 
 	EVP_PKEY_CTX_free(ctx);
 	EVP_PKEY_free(paramgen_key);
@@ -112,7 +99,7 @@ static EVP_PKEY* ECDSA_generate_key() {
 static X509* EVP_PKEY_to_X509(EVP_PKEY *pkey) {
 	X509 *x509 = X509_new();
 
-	assert(X509_set_pubkey(x509, pkey), "We cannot set pub key");
+	//assert(X509_set_pubkey(x509, pkey), "We cannot set pub key");
 	assert(X509_sign(x509, pkey, EVP_sha256()), "We cannot sign certificate");
 
 	return x509;
@@ -139,10 +126,10 @@ static EVP_PKEY* EVP_PKEY_read_x509() {
 
 static void ECDSA_test_start() {
 
-	unsigned char in[] = "Donizete Junior Ribeiro Vida";
+	unsigned char in[] = "Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s, when an unknown printer took a galley of type and scrambled it to make a type specimen book. It has survived not only five centuries, but also the leap into electronic typesetting, remaining essentially unchanged. It was popularised in the 1960s with the release of Letraset sheets containing Lorem Ipsum passages, and more recently with desktop publishing software like Aldus PageMaker including versions of Lorem Ipsum.";
 	unsigned long in_len = sizeof(in);
 
-	unsigned char buffer[2048];
+	unsigned char buffer[4096];
 	unsigned long buffer_len = 0;
 
 	EVP_PKEY *pkey = ECDSA_generate_key();
@@ -156,15 +143,15 @@ static void ECDSA_test_start() {
 	//in[in_len - 1] = 'A';
 	ECDSA_test_verify(read_pkey, buffer, buffer_len, in, in_len);
 
-	X509* x509 = EVP_PKEY_to_X509(pkey);
-	EVP_PKEY* x509_pkey = X509_to_EVP_PKEY(x509);
-	EC_KEY* ec_key = EVP_PKEY_get1_EC_KEY(x509_pkey);
-	const EC_POINT* publicKey =  EC_KEY_get0_public_key(ec_key);
-	const BIGNUM* privateKey = EC_KEY_get0_private_key(ec_key);
-
-	ECDSA_test_verify(x509_pkey, buffer, buffer_len, in, in_len);
-	ECDSA_test_sign(x509_pkey, buffer, &buffer_len, in, in_len);
-	//ECDSA_test_verify(x509_pkey, buffer, buffer_len, in, in_len);
+//	X509* x509 = EVP_PKEY_to_X509(pkey);
+//	EVP_PKEY* x509_pkey = X509_to_EVP_PKEY(x509);
+//	EC_KEY* ec_key = EVP_PKEY_get0_EC_KEY(x509_pkey);
+//
+//	const EC_POINT* publicKey =  EC_KEY_get0_public_key(ec_key);
+//	const BIGNUM* privateKey = EC_KEY_get0_private_key(ec_key);
+//
+//	ECDSA_test_verify(x509_pkey, buffer, buffer_len, in, in_len);
+//	//ECDSA_test_sign(x509_pkey, buffer, &buffer_len, in, in_len);
 
 	EVP_PKEY_free(pkey);
 	EVP_PKEY_free(read_pkey);
