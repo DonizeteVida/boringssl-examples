@@ -6,14 +6,14 @@
 
 static void ECDH_test_encrypt(EVP_PKEY* pkey, unsigned char* sig, unsigned long* sig_len, unsigned char* dig, long dig_len) {
 	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
-	assert(ctx, "Encrypt context is NULL");
+	assert(ctx);
 
-	assert(EVP_PKEY_encrypt_init(ctx), "Encrypt sign cannot be started");
+	assert(EVP_PKEY_encrypt_init(ctx));
 
-	assert(EVP_PKEY_encrypt(ctx, NULL, sig_len, dig, dig_len), "Signature size cannot be calculated");
+	assert(EVP_PKEY_encrypt(ctx, NULL, sig_len, dig, dig_len));
 	std::cout << "Digest length: " << *sig_len << std::endl;
 
-	assert(EVP_PKEY_encrypt(ctx, sig, sig_len, dig, dig_len), "Signature cannot be transfered");
+	assert(EVP_PKEY_encrypt(ctx, sig, sig_len, dig, dig_len));
 
 	std::cout << "Digest content: " << sig << std::endl;
 
@@ -22,10 +22,10 @@ static void ECDH_test_encrypt(EVP_PKEY* pkey, unsigned char* sig, unsigned long*
 
 static void ECDH_test_decrypt(EVP_PKEY* pkey, unsigned char* out, unsigned long out_len, unsigned char* in, long in_len) {
 	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
-	assert(ctx, "Encrypt context is NULL");
+	assert(ctx);
 
-	assert(EVP_PKEY_decrypt_init(ctx), "Decrypt init cannot be performed");
-	assert(EVP_PKEY_decrypt(ctx, out, &out_len, in, in_len), "Decrypt cannot be performed");
+	assert(EVP_PKEY_decrypt_init(ctx));
+	assert(EVP_PKEY_decrypt(ctx, out, &out_len, in, in_len));
 
 	EVP_PKEY_CTX_free(ctx);
 }
@@ -34,11 +34,11 @@ static void ECDH_write_key(EC_KEY* ec_key) {
 	//We'll write this key
 	BIO* bio = BIO_new_file("key.pem", "w");
 
-	assert(ec_key, "EC_KEY was not generated");
+	assert(ec_key);
 	BIO_set_flags(bio, BIO_FLAGS_WRITE);
 
-	assert(PEM_write_bio_ECPrivateKey(bio, ec_key, NULL, NULL, 0, NULL, NULL), "ECPrivateKey cannot be write");
-	assert(PEM_write_bio_EC_PUBKEY(bio, ec_key), "EC_PUBKEY cannot be write");
+	assert(PEM_write_bio_ECPrivateKey(bio, ec_key, NULL, NULL, 0, NULL, NULL));
+	assert(PEM_write_bio_EC_PUBKEY(bio, ec_key));
 
 	BIO_free(bio);
 }
@@ -50,23 +50,23 @@ static EVP_PKEY* ECDH_test_recover_key() {
 
 static EVP_PKEY* ECDH_generate_key() {
 	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_EC, NULL);
-	assert(ctx, "Context cannot be created");
+	assert(ctx);
 
 	//All this is to generate EVP_PKEY key properly
-	assert(EVP_PKEY_paramgen_init(ctx), "ParamGen cannot be started");
-	assert(EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, NID_secp521r1), "Curve cannot be set");
-	assert(EVP_PKEY_CTX_set_ec_param_enc(ctx, OPENSSL_EC_NAMED_CURVE), "Encoding cannot be set");
+	assert(EVP_PKEY_paramgen_init(ctx));
+	assert(EVP_PKEY_CTX_set_ec_paramgen_curve_nid(ctx, NID_secp521r1));
+	assert(EVP_PKEY_CTX_set_ec_param_enc(ctx, OPENSSL_EC_NAMED_CURVE));
 
 	//Creating a new key from filled context
 	EVP_PKEY* paramgen_key = NULL;
-	assert(EVP_PKEY_paramgen(ctx, &paramgen_key), "EVP_PKEY key cannot be created from context");
+	assert(EVP_PKEY_paramgen(ctx, &paramgen_key));
 
 	//Creating a new context as we need to use their API's
 	EVP_PKEY_CTX* keygen_ctx = EVP_PKEY_CTX_new(paramgen_key, NULL);
-	assert(keygen_ctx, "ParamGen context cannot be created");
-	assert(EVP_PKEY_keygen_init(keygen_ctx), "KeyGen cannot be started");
+	assert(keygen_ctx);
+	assert(EVP_PKEY_keygen_init(keygen_ctx));
 	EVP_PKEY* keygen_key = NULL;
-	assert(EVP_PKEY_keygen(keygen_ctx, &keygen_key), "KeyGen key cannot be created");
+	assert(EVP_PKEY_keygen(keygen_ctx, &keygen_key));
 
 	EVP_PKEY_CTX_free(ctx);
 	EVP_PKEY_free(paramgen_key);

@@ -22,11 +22,11 @@ bool KeyRecover::initialize(EVP_PKEY* pkey, BIO* bio) {
 
 EVP_PKEY* KeyRecover::operator()() {
 	BIO *bio = BIO_new_file(pemName, "r");
-	assert(bio, "We cannot found a PEM file");
+	assert(bio);
 
 	EVP_PKEY *pkey = EVP_PKEY_new();
 
-	assert(initialize(pkey, bio), "We cannot initialize the EVP_PKEY");
+	assert(initialize(pkey, bio));
 
 	BIO_free(bio);
 

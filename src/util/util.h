@@ -15,8 +15,12 @@ typedef struct {
 	size_t len;
 } BINARY_DATA;
 
+#define assert(res) \
+	if (!res) { \
+		error(__func__); \
+	} \
+
 void error(std::string);
-void assert(bool, std::string);
 void write_binary(std::string name, BINARY_DATA data);
 BINARY_DATA read_binary(std::string name);
 void BINARY_DATA_free(BINARY_DATA& data);

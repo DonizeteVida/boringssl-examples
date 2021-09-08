@@ -16,18 +16,12 @@ using namespace std;
 
 #include "util.h"
 
-void error(string message) {
-	cerr << message << endl;
-}
-
-void assert(bool res, string message) {
-	if (!res) {
-		error(message);
-		char buf[4096];
-		ERR_error_string(ERR_get_error(), buf);
-		cout << "Error: " << buf << endl;
-		exit(EXIT_FAILURE);
-	}
+void error(string function) {
+	char buf[4096];
+	ERR_error_string(ERR_get_error(), buf);
+	cerr << function << " " << "could not be performed" << endl;
+	cout << "Error: " << buf << endl;
+	exit(EXIT_FAILURE);
 }
 
 void write_binary(std::string name, BINARY_DATA data) {

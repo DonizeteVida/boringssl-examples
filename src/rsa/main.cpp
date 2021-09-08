@@ -9,15 +9,15 @@
 
 static void RSA_test_encrypt(EVP_PKEY* pkey, unsigned char* out, unsigned long* out_len, unsigned char* in, long in_len) {
 	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
-	assert(ctx, "Encrypt context is NULL");
+	assert(ctx);
 
-	assert(EVP_PKEY_encrypt_init(ctx), "Encrypt sign cannot be performed");
+	assert(EVP_PKEY_encrypt_init(ctx));
 	//assert(EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING), "Encrypt padding cannot be performed");
 
-	assert(EVP_PKEY_encrypt(ctx, NULL, out_len, in, in_len), "Encrypt length cannot be performed");
+	assert(EVP_PKEY_encrypt(ctx, NULL, out_len, in, in_len));
 	std::cout << "Encrypt length: " << *out_len << std::endl;
 
-	assert(EVP_PKEY_encrypt(ctx, out, out_len, in, in_len), "Encrypt cannot be performed");
+	assert(EVP_PKEY_encrypt(ctx, out, out_len, in, in_len));
 
 	std::cout << "Encrypt content: " << out << std::endl;
 
@@ -26,13 +26,13 @@ static void RSA_test_encrypt(EVP_PKEY* pkey, unsigned char* out, unsigned long* 
 
 static void RSA_test_decrypt(EVP_PKEY* pkey, unsigned char* out, unsigned long *out_len, unsigned char* in, long in_len) {
 	EVP_PKEY_CTX* ctx = EVP_PKEY_CTX_new(pkey, NULL);
-	assert(ctx, "Encrypt context is NULL");
+	assert(ctx);
 
-	assert(EVP_PKEY_decrypt_init(ctx), "Encrypt init cannot be performed");
+	assert(EVP_PKEY_decrypt_init(ctx));
 	//assert(EVP_PKEY_CTX_set_rsa_padding(ctx, RSA_PKCS1_OAEP_PADDING), "Decrypt padding cannot be performed");
 
-	assert(EVP_PKEY_decrypt(ctx, NULL, out_len, in, in_len), "Decrypt length cannot be performed");
-	assert(EVP_PKEY_decrypt(ctx, out, out_len, in, in_len), "Decrypt cannot be performed");
+	assert(EVP_PKEY_decrypt(ctx, NULL, out_len, in, in_len));
+	assert(EVP_PKEY_decrypt(ctx, out, out_len, in, in_len));
 
 	EVP_PKEY_CTX_free(ctx);
 }
@@ -41,12 +41,12 @@ static void RSA_write_key(RSA* rsa_key) {
 	//We'll write this key
 	BIO* bio = BIO_new_file("key.pem", "w");
 
-	assert(rsa_key, "EC_KEY was not generated");
+	assert(rsa_key);
 	BIO_set_flags(bio, BIO_FLAGS_WRITE);
 
-	assert(PEM_write_bio_RSAPrivateKey(bio, rsa_key, NULL, NULL, 0, NULL, NULL), "RSAPrivateKey cannot be performed");
-	assert(PEM_write_bio_RSAPublicKey(bio, rsa_key), "RSAPrivateKey cannot be performed");
-	assert(PEM_write_bio_RSA_PUBKEY(bio, rsa_key), "RSA_PUBKEY cannot be write");
+	assert(PEM_write_bio_RSAPrivateKey(bio, rsa_key, NULL, NULL, 0, NULL, NULL));
+	assert(PEM_write_bio_RSAPublicKey(bio, rsa_key));
+	assert(PEM_write_bio_RSA_PUBKEY(bio, rsa_key));
 
 	BIO_free(bio);
 }
@@ -54,37 +54,37 @@ static void RSA_write_key(RSA* rsa_key) {
 static EVP_PKEY* RSA_test_recover_key() {
 	BIO* bio = BIO_new_file("key.pem", "r");
 
-	assert(bio, "We cannot read a PEM file");
+	assert(bio);
 
 	RSA* rsa_key = NULL;
 
-	assert(PEM_read_bio_RSAPrivateKey(bio, &rsa_key, NULL, NULL), "We cannot retrieve file as RSAPrivateKey");
-	assert(PEM_read_bio_RSAPublicKey(bio, &rsa_key, NULL, NULL), "We cannot retrieve file as RSAPublicKey");
-	assert(PEM_read_bio_RSA_PUBKEY(bio, &rsa_key, NULL, NULL), "We cannot retrieve file as RSAPublicKey");
+	assert(PEM_read_bio_RSAPrivateKey(bio, &rsa_key, NULL, NULL));
+	assert(PEM_read_bio_RSAPublicKey(bio, &rsa_key, NULL, NULL));
+	assert(PEM_read_bio_RSA_PUBKEY(bio, &rsa_key, NULL, NULL));
 
 	BIO_free(bio);
 
 	EVP_PKEY* pkey = EVP_PKEY_new();
 
-	assert(EVP_PKEY_set1_RSA(pkey, rsa_key), "EVP_PKEY_set1_RSA cannot be performed");
+	assert(EVP_PKEY_set1_RSA(pkey, rsa_key));
 
 	return pkey;
 }
 
 static EVP_PKEY* RSA_generate_key() {
 	EVP_PKEY_CTX *ctx = EVP_PKEY_CTX_new_id(EVP_PKEY_RSA, NULL);
-	assert(ctx, "Context cannot be created");
+	assert(ctx);
 
 	//All this is to generate EVP_PKEY keys properly
-	assert(EVP_PKEY_keygen_init(ctx), "KeyGen cannot be started");
-	assert(EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, 2048), "Bits cannot be set");
+	assert(EVP_PKEY_keygen_init(ctx));
+	assert(EVP_PKEY_CTX_set_rsa_keygen_bits(ctx, 2048));
 	BIGNUM *expiration = BN_new();
 	BN_set_word(expiration, 0x10001);
-	assert(EVP_PKEY_CTX_set_rsa_keygen_pubexp(ctx, expiration), "Expiration date cannot be set");
+	assert(EVP_PKEY_CTX_set_rsa_keygen_pubexp(ctx, expiration));
 
 	//Creating a new key from filled context
 	EVP_PKEY *pkey = NULL;
-	assert(EVP_PKEY_keygen(ctx, &pkey),"EVP_PKEY key cannot be created from context");
+	assert(EVP_PKEY_keygen(ctx, &pkey));
 
 	EVP_PKEY_CTX_free(ctx);
 

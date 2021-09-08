@@ -3,3 +3,4 @@
 *.pem
 encrypt.txt
 *.data
+data.bin
